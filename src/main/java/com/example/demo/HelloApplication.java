@@ -10,6 +10,10 @@ public class HelloApplication extends Application {
     public void start(Stage stage) throws Exception {
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 800, 600);
+        System.out.println(
+                TeacherSeed.generateTeachers(10)
+        );
+
         stage.setTitle("Zarządzanie Nauczycielami");
         stage.setScene(scene);
         stage.show();

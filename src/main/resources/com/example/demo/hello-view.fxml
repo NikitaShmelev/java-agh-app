@@ -1,16 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<?import javafx.scene.control.Button?>
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.example.demo.HelloController">
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.demo.HelloController"
+      spacing="10" alignment="CENTER">
     <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+        <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <Label fx:id="welcomeText"/>
-    <Button text="Hello!" onAction="#onHelloButtonClick"/>
+
+    <HBox spacing="10">
+        <Label text="Filter:"/>
+        <TextField fx:id="filterField" promptText="Last name…"/>
+
+        <Button fx:id="addButton"    text="Add"    onAction="#onAddTeacher"/>
+        <Button fx:id="deleteButton" text="Delete" onAction="#onDeleteTeacher"/>
+        <Button fx:id="sortButton"   text="Sort"   onAction="#onSortTeachers"/>
+    </HBox>
+
+
+    <TableView fx:id="teacherTable" prefWidth="600" prefHeight="300" editable="true">
+        <columns>
+            <TableColumn fx:id="firstNameCol" text="First Name" prefWidth="120"/>
+            <TableColumn fx:id="lastNameCol"  text="Last Name"  prefWidth="120"/>
+            <TableColumn fx:id="conditionCol" text="Condition"  prefWidth="100"/>
+            <TableColumn fx:id="birthYearCol" text="Birth Year" prefWidth="100"/>
+            <TableColumn fx:id="salaryCol"    text="Salary"     prefWidth="160"/>
+        </columns>
+    </TableView>
 </VBox>
