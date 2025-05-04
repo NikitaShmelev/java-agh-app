@@ -30,6 +30,10 @@ public class ClassTeacher {
         teachers.add(teacher);
     }
 
+    public String toString() {
+        return this.getGroupName();
+    }
+
     public void addSalary(Teacher teacher, double amount) {
         if (teachers.contains(teacher)) {
             if (teacher.getSalary() + amount < 0) {
@@ -110,6 +114,10 @@ public class ClassTeacher {
 
     public int getMaxTeachers() {
         return maxTeachers;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
     }
 
     public int getCurrentSize() {

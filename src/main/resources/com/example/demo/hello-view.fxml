@@ -4,31 +4,51 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.example.demo.HelloController"
-      spacing="10" alignment="CENTER">
-    <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
-    </padding>
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.demo.HelloController">
 
+    <left>
+        <VBox spacing="5">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <Label text="Teacher Groups"/>
+            <ListView fx:id="groupList" prefWidth="180"/>
+            <HBox spacing="5">
+                <Button fx:id="addGroupButton"    text="Add Group"    onAction="#onAddGroup"/>
+                <Button fx:id="deleteGroupButton" text="Delete Group" onAction="#onDeleteGroup"/>
+            </HBox>
+            <HBox spacing="5">
+                <Button fx:id="modifyGroupButton" text="Modify Group" onAction="#onModifyGroup"/>
+                <Button fx:id="sortGroupButton"   text="Sort Groups"  onAction="#onSortGroups"/>
+            </HBox>
+        </VBox>
+    </left>
 
-    <HBox spacing="10">
-        <Label text="Filter:"/>
-        <TextField fx:id="filterField" promptText="Last name…"/>
+    <top>
+        <HBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <Label text="Filter by last name:"/>
+            <TextField fx:id="filterField" promptText="Enter last name" onAction="#onFilter"/>
+            <Button fx:id="addButton"          text="Add Teacher"    onAction="#onAddTeacher"/>
+            <Button fx:id="deleteButton"       text="Delete Teacher" onAction="#onDeleteTeacher"/>
+            <Button fx:id="modifyButton"       text="Modify Teacher" onAction="#onModifyTeacher"/>
+            <Button fx:id="sortTeacherButton"  text="Sort Teachers"  onAction="#onSortTeachers"/>
+        </HBox>
+    </top>
 
-        <Button fx:id="addButton"    text="Add"    onAction="#onAddTeacher"/>
-        <Button fx:id="deleteButton" text="Delete" onAction="#onDeleteTeacher"/>
-        <Button fx:id="sortButton"   text="Sort"   onAction="#onSortTeachers"/>
-    </HBox>
+    <center>
+        <TableView fx:id="teacherTable" prefWidth="600" prefHeight="400" editable="true">
+            <columns>
+                <TableColumn fx:id="firstNameCol" text="First Name" prefWidth="120"/>
+                <TableColumn fx:id="lastNameCol"  text="Last Name"  prefWidth="120"/>
+                <TableColumn fx:id="conditionCol" text="Condition"  prefWidth="100"/>
+                <TableColumn fx:id="birthYearCol" text="Birth Year" prefWidth="100"/>
+                <TableColumn fx:id="salaryCol"    text="Salary"     prefWidth="140"/>
+            </columns>
+        </TableView>
+    </center>
 
-
-    <TableView fx:id="teacherTable" prefWidth="600" prefHeight="300" editable="true">
-        <columns>
-            <TableColumn fx:id="firstNameCol" text="First Name" prefWidth="120"/>
-            <TableColumn fx:id="lastNameCol"  text="Last Name"  prefWidth="120"/>
-            <TableColumn fx:id="conditionCol" text="Condition"  prefWidth="100"/>
-            <TableColumn fx:id="birthYearCol" text="Birth Year" prefWidth="100"/>
-            <TableColumn fx:id="salaryCol"    text="Salary"     prefWidth="160"/>
-        </columns>
-    </TableView>
-</VBox>
+</BorderPane>
