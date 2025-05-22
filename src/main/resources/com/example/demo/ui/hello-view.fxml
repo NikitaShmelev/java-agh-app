@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.demo.ui.HelloController">
+
+    <!-- ======= LEWA SEKCJA : Lista grup ======= -->
+    <left>
+        <VBox spacing="5" BorderPane.alignment="CENTER">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+
+            <Label text="Groups"/>
+            <ListView fx:id="groupList" prefWidth="180"/>
+
+            <HBox spacing="5">
+                <Button text="Add"    onAction="#onAddGroup"/>
+                <Button text="Delete" onAction="#onDeleteGroup"/>
+            </HBox>
+            <HBox spacing="5">
+                <Button text="Modify" onAction="#onModifyGroup"/>
+                <Button text="Sort"   onAction="#onSortGroups"/>
+            </HBox>
+        </VBox>
+    </left>
+
+    <!-- ======= GÓRNA SEKCJA : Pasek narzędzi ======= -->
+    <top>
+        <HBox spacing="10" BorderPane.alignment="CENTER">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+
+            <Label text="Filter by last name:"/>
+            <TextField fx:id="filterField" promptText="Enter last name" onAction="#onFilter"/>
+
+            <Button text="Add"    onAction="#onAddTeacher"/>
+            <Button text="Delete" onAction="#onDeleteTeacher"/>
+            <Button text="Modify" onAction="#onModifyTeacher"/>
+            <Button text="Sort"   onAction="#onSortTeachers"/>
+
+            <Separator orientation="VERTICAL"/>
+            <Button text="Export CSV" onAction="#onExportCsv"/>
+        </HBox>
+    </top>
+
+    <!-- ======= CENTRALNA SEKCJA : Tabela nauczycieli ======= -->
+    <center>
+        <TableView fx:id="teacherTable" prefWidth="600" prefHeight="400" editable="true">
+            <columns>
+                <TableColumn fx:id="firstNameCol" text="First Name" prefWidth="120"/>
+                <TableColumn fx:id="lastNameCol"  text="Last Name"  prefWidth="120"/>
+                <TableColumn fx:id="conditionCol" text="Condition"  prefWidth="100"/>
+                <TableColumn fx:id="birthYearCol" text="Birth Year" prefWidth="100"/>
+                <TableColumn fx:id="salaryCol"    text="Salary"     prefWidth="140"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <!-- ======= PRAWA SEKCJA : Statystyki ocen ======= -->
+    <right>
+        <VBox spacing="5" BorderPane.alignment="CENTER">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+
+            <Label text="Rates stats"/>
+            <TableView fx:id="statsTable" prefWidth="250">
+                <columns>
+                    <TableColumn fx:id="groupCol" text="Group"/>
+                    <TableColumn fx:id="countCol" text="# rates"/>
+                    <TableColumn fx:id="avgCol"   text="Avg"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </right>
+
+</BorderPane>
