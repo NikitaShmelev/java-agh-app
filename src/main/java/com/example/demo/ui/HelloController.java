@@ -22,7 +22,7 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.util.*;
 
-/** GUI controller – spełnia wymagania zadania 3. */
+/** Kontroler głównego widoku JavaFX. */
 public class HelloController {
 
     /* ---------- FXML ---------- */
@@ -53,18 +53,35 @@ public class HelloController {
 
     private final ClassContainer container = new ClassContainer();
 
+    /* ---------- filtr: wybrana grupa + fraza nazwiska ---------- */
+    private final SimpleObjectProperty<ClassTeacher> selGroup   = new SimpleObjectProperty<>(null);
+    private final SimpleStringProperty               nameFilter = new SimpleStringProperty("");
+
+    private final Runnable updatePredicate = () -> filtered.setPredicate(t -> {
+        boolean byGroup = selGroup.get() == null ||
+                t.getGroup() == null   ||
+                t.getGroup().equals(selGroup.get());
+        boolean byName  = t.getLastName().toLowerCase()
+                .contains(nameFilter.get().toLowerCase());
+        return byGroup && byName;
+    });
+
     /* ---------- init ---------- */
     @FXML
     private void initialize() {
 
-        /* przykładowe dwie grupy */
+        /* demo grupy */
         container.addClass("IA", 30);
         container.addClass("IB", 25);
         refreshGroupView();
 
-        /* wybór grupy → filtr nauczycieli */
-        groupList.getSelectionModel().selectedItemProperty().addListener((obs, o, n) ->
-                filtered.setPredicate(t -> n == null || t.getGroup() == null || t.getGroup().equals(n)));
+        /* --------- filtracja --------- */
+        groupList.getSelectionModel().selectedItemProperty().addListener((obs,o,n)->{
+            selGroup.set(n); updatePredicate.run();
+        });
+        filterField.textProperty().addListener((obs,o,n)->{
+            nameFilter.set(n); updatePredicate.run();
+        });
 
         /* --------- kolumny + edycja --------- */
         teacherTable.setEditable(true);
@@ -94,29 +111,12 @@ public class HelloController {
                 Arrays.stream(TeacherCondition.values()).map(Enum::name).toArray(String[]::new)
         ));
 
-        /* commit → zapis do BD */
-        firstNameCol.setOnEditCommit(e -> {
-            Teacher t = e.getRowValue();
-            t.setFirstName(e.getNewValue());
-            teacherSvc.save(t);
-        });
-        lastNameCol.setOnEditCommit(e -> {
-            Teacher t = e.getRowValue();
-            t.setLastName(e.getNewValue());
-            teacherSvc.save(t);
-        });
-        birthYearCol.setOnEditCommit(e -> {
-            Teacher t = e.getRowValue();
-            t.setBirthYear(e.getNewValue());
-            teacherSvc.save(t);
-        });
-        salaryCol.setOnEditCommit(e -> {
-            Teacher t = e.getRowValue();
-            t.setSalary(e.getNewValue());
-            teacherSvc.save(t);
-        });
+        firstNameCol.setOnEditCommit(e -> { Teacher t=e.getRowValue(); t.setFirstName(e.getNewValue()); teacherSvc.save(t);} );
+        lastNameCol .setOnEditCommit(e -> { Teacher t=e.getRowValue(); t.setLastName(e.getNewValue());  teacherSvc.save(t);} );
+        birthYearCol.setOnEditCommit(e -> { Teacher t=e.getRowValue(); t.setBirthYear(e.getNewValue()); teacherSvc.save(t);} );
+        salaryCol   .setOnEditCommit(e -> { Teacher t=e.getRowValue(); t.setSalary(e.getNewValue());    teacherSvc.save(t);} );
         conditionCol.setOnEditCommit(e -> {
-            Teacher t = e.getRowValue();
+            Teacher t=e.getRowValue();
             t.setCondition(TeacherCondition.valueOf(e.getNewValue()));
             teacherSvc.save(t);
             teacherTable.refresh();
@@ -124,17 +124,17 @@ public class HelloController {
 
         teacherTable.setItems(filtered);
 
-        /* kolumny statystyk */
+        /* statystyki ocen */
         groupCol.setCellValueFactory(c -> new SimpleStringProperty((String) c.getValue()[0]));
         countCol.setCellValueFactory(c -> new SimpleObjectProperty<>((Long)   c.getValue()[1]));
         avgCol  .setCellValueFactory(c -> new SimpleObjectProperty<>((Double) c.getValue()[2]));
         loadStats();
     }
 
-    /* ---------- filtr nazwiska ---------- */
+    /* ---------- ENTER w polu nazwiska ---------- */
     @FXML private void onFilter() {
-        String phrase = filterField.getText().toLowerCase();
-        filtered.setPredicate(t -> t.getLastName().toLowerCase().contains(phrase));
+        nameFilter.set(filterField.getText());
+        updatePredicate.run();
     }
 
     /* ---------- TEACHER CRUD ---------- */
@@ -158,11 +158,8 @@ public class HelloController {
         TextInputDialog d = new TextInputDialog(String.valueOf(sel.getSalary()));
         d.setHeaderText("New salary:");
         d.showAndWait().ifPresent(s -> {
-            try {
-                sel.setSalary(Double.parseDouble(s));
-                teacherSvc.save(sel);
-                teacherTable.refresh();
-            } catch (NumberFormatException ex){ alert("Invalid number"); }
+            try { sel.setSalary(Double.parseDouble(s)); teacherSvc.save(sel); teacherTable.refresh(); }
+            catch (NumberFormatException ex){ alert("Invalid number"); }
         });
     }
 
@@ -201,10 +198,8 @@ public class HelloController {
         TextInputDialog d = new TextInputDialog(String.valueOf(g.getMaxTeachers()));
         d.setHeaderText("New max teachers for "+g.getName());
         d.showAndWait().ifPresent(s -> {
-            try {
-                g.setMaxTeachers(Integer.parseInt(s));
-                refreshGroupView();
-            } catch (NumberFormatException ex){ alert("Invalid number"); }
+            try { g.setMaxTeachers(Integer.parseInt(s)); refreshGroupView(); }
+            catch (NumberFormatException ex){ alert("Invalid number"); }
         });
     }
 
