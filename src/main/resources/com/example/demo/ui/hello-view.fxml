@@ -41,6 +41,7 @@
 
             <Separator orientation="VERTICAL"/>
             <Button text="Export CSV" onAction="#onExportCsv"/>
+            <Button text="Add Rate" onAction="#onAddRate"/>
         </HBox>
     </top>
 

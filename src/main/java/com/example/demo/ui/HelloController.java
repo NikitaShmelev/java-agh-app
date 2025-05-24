@@ -9,9 +9,13 @@ import javafx.beans.property.*;
 import javafx.collections.*;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.ChoiceBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.VBox;
+import javafx.util.Pair;
 import javafx.util.StringConverter;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
@@ -22,23 +26,20 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.util.*;
 
-/** Kontroler głównego widoku JavaFX. */
+/** Główny kontroler JavaFX: CRUD nauczycieli i grup, filtrowanie, sortowanie, oceny, CSV. */
 public class HelloController {
 
     /* ---------- FXML ---------- */
     @FXML private ListView<ClassTeacher> groupList;
-
     @FXML private TextField filterField;
     @FXML private TableView<Teacher> teacherTable;
-    @FXML private TableColumn<Teacher,String>  firstNameCol, lastNameCol;
-    @FXML private TableColumn<Teacher,String>  conditionCol;
+    @FXML private TableColumn<Teacher,String> firstNameCol, lastNameCol, conditionCol;
     @FXML private TableColumn<Teacher,Integer> birthYearCol;
-    @FXML private TableColumn<Teacher,Double>  salaryCol;
-
+    @FXML private TableColumn<Teacher,Double> salaryCol;
     @FXML private TableView<Object[]> statsTable;
-    @FXML private TableColumn<Object[],String>  groupCol;
-    @FXML private TableColumn<Object[],Long>    countCol;
-    @FXML private TableColumn<Object[],Double>  avgCol;
+    @FXML private TableColumn<Object[],String> groupCol;
+    @FXML private TableColumn<Object[],Long> countCol;
+    @FXML private TableColumn<Object[],Double> avgCol;
 
     /* ---------- serwisy ---------- */
     private final TeacherService teacherSvc = new TeacherService();
@@ -47,13 +48,13 @@ public class HelloController {
 
     /* ---------- dane ---------- */
     private final ObservableList<Teacher> masterTeachers =
-            FXCollections.observableArrayList( teacherSvc.all() );
+            FXCollections.observableArrayList(teacherSvc.all());
     private final FilteredList<Teacher> filtered =
-            new FilteredList<>( masterTeachers );
+            new FilteredList<>(masterTeachers);
 
     private final ClassContainer container = new ClassContainer();
 
-    /* ---------- filtr: wybrana grupa + fraza nazwiska ---------- */
+    /* ---------- filtracja (grupa ∧ nazwisko) ---------- */
     private final SimpleObjectProperty<ClassTeacher> selGroup   = new SimpleObjectProperty<>(null);
     private final SimpleStringProperty               nameFilter = new SimpleStringProperty("");
 
@@ -70,12 +71,12 @@ public class HelloController {
     @FXML
     private void initialize() {
 
-        /* demo grupy */
+        /* demo – dwie grupy */
         container.addClass("IA", 30);
         container.addClass("IB", 25);
         refreshGroupView();
 
-        /* --------- filtracja --------- */
+        /* --------- filtry --------- */
         groupList.getSelectionModel().selectedItemProperty().addListener((obs,o,n)->{
             selGroup.set(n); updatePredicate.run();
         });
@@ -85,12 +86,8 @@ public class HelloController {
 
         /* --------- kolumny + edycja --------- */
         teacherTable.setEditable(true);
-
-        firstNameCol.setEditable(true);
-        lastNameCol .setEditable(true);
-        conditionCol.setEditable(true);
-        birthYearCol.setEditable(true);
-        salaryCol   .setEditable(true);
+        Arrays.asList(firstNameCol,lastNameCol,conditionCol,birthYearCol,salaryCol)
+                .forEach(c->c.setEditable(true));
 
         firstNameCol.setCellValueFactory(c -> Bindings.createStringBinding(c.getValue()::getFirstName));
         lastNameCol .setCellValueFactory(c -> Bindings.createStringBinding(c.getValue()::getLastName));
@@ -118,13 +115,12 @@ public class HelloController {
         conditionCol.setOnEditCommit(e -> {
             Teacher t=e.getRowValue();
             t.setCondition(TeacherCondition.valueOf(e.getNewValue()));
-            teacherSvc.save(t);
-            teacherTable.refresh();
+            teacherSvc.save(t); teacherTable.refresh();
         });
 
         teacherTable.setItems(filtered);
 
-        /* statystyki ocen */
+        /* --------- statystyki ocen --------- */
         groupCol.setCellValueFactory(c -> new SimpleStringProperty((String) c.getValue()[0]));
         countCol.setCellValueFactory(c -> new SimpleObjectProperty<>((Long)   c.getValue()[1]));
         avgCol  .setCellValueFactory(c -> new SimpleObjectProperty<>((Double) c.getValue()[2]));
@@ -142,14 +138,14 @@ public class HelloController {
         Teacher t = new Teacher("New","Teacher", TeacherCondition.OBECNY,
                 Year.now().getValue(), 0);
         teacherSvc.save(t);
-        masterTeachers.setAll( teacherSvc.all() );
+        masterTeachers.setAll(teacherSvc.all());
     }
 
     @FXML private void onDeleteTeacher() {
         Teacher sel = teacherTable.getSelectionModel().getSelectedItem();
         if (sel == null) { alert("Select a teacher first"); return; }
         teacherSvc.delete(sel.getId());
-        masterTeachers.setAll( teacherSvc.all() );
+        masterTeachers.setAll(teacherSvc.all());
     }
 
     @FXML private void onModifyTeacher() {
@@ -179,10 +175,10 @@ public class HelloController {
         Optional<String> maxOpt = dMax.showAndWait();
         if (!maxOpt.isPresent()) return;
 
-        try {
-            container.addClass(nameOpt.get(), Integer.parseInt(maxOpt.get()));
-            refreshGroupView();
-        } catch (Exception ex) { alert(ex.getMessage()); }
+        try { container.addClass(nameOpt.get(), Integer.parseInt(maxOpt.get())); }
+        catch (Exception ex){ alert(ex.getMessage()); return; }
+
+        refreshGroupView();
     }
 
     @FXML private void onDeleteGroup() {
@@ -208,28 +204,51 @@ public class HelloController {
                 Comparator.comparingDouble(ClassTeacher::getFillPercentage).reversed());
     }
 
-    /* ---------- RATE ---------- */
+    /* ---------- ADD RATE (dialog) ---------- */
     @FXML private void onAddRate() {
         ClassTeacher grp = groupList.getSelectionModel().getSelectedItem();
         if (grp == null) { alert("Select group first"); return; }
 
+        Dialog<Pair<Integer,String>> dialog = new Dialog<>();
+        dialog.setTitle("Add Rate to " + grp.getName());
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        Spinner<Integer> spinner = new Spinner<>(0,6,5);
+        spinner.setEditable(true);
+        TextArea commentArea = new TextArea();
+        commentArea.setPromptText("Comment (required)");
+
+        VBox box = new VBox(10,
+                new Label("Value 0–6:"), spinner,
+                new Label("Comment:"), commentArea);
+        box.setPadding(new Insets(10));
+        dialog.getDialogPane().setContent(box);
+
+        Node okBtn = dialog.getDialogPane().lookupButton(ButtonType.OK);
+        okBtn.disableProperty().bind(commentArea.textProperty().isEmpty());
+
+        dialog.setResultConverter(btn -> btn == ButtonType.OK
+                ? new Pair<>(spinner.getValue(), commentArea.getText())
+                : null);
+
+        Optional<Pair<Integer,String>> res = dialog.showAndWait();
+        if (!res.isPresent()) return;
+
         Rate r = new Rate();
         r.setGroup(grp);
         r.setDate(LocalDate.now());
-        r.setComment("ok");
-        r.setValue(5);
+        r.setValue(res.get().getKey());
+        r.setComment(res.get().getValue());
         rateSvc.addRate(r);
         loadStats();
     }
 
     /* ---------- CSV ---------- */
     @FXML private void onExportCsv() {
-        try {
-            csvExp.exportTeachers(Paths.get("teachers.csv"));
+        try { csvExp.exportTeachers(Paths.get("teachers.csv"));
             alert("CSV saved in project root");
         } catch (IOException ex) {
-            ex.printStackTrace();
-            alert("IO error");
+            ex.printStackTrace(); alert("IO error");
         }
     }
 
@@ -240,9 +259,8 @@ public class HelloController {
 
     private void refreshGroupView() {
         List<ClassTeacher> list = new ArrayList<>();
-        for (String n : container.showFillPercentage().keySet()) {
+        for (String n : container.showFillPercentage().keySet())
             list.add(container.get(n));
-        }
         groupList.setItems(FXCollections.observableArrayList(list));
     }
 
