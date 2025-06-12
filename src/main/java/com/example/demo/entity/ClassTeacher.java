@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Grupa (klasa) nauczycieli.
+ */
 @Entity
 @Table(name = "groups")
 public class ClassTeacher {
@@ -27,43 +30,61 @@ public class ClassTeacher {
 
     /* ---------- konstruktory ---------- */
 
-    protected ClassTeacher() { }                     // JPA no-arg
+    /** wymagany przez JPA */
+    protected ClassTeacher() { }
+
     public ClassTeacher(String name, int maxTeachers) {
         this.name = name;
         this.maxTeachers = maxTeachers;
     }
 
-    /* ---------- gettery / settery ---------- */
+    /* ---------- get / set ---------- */
 
-    public Long getId()                 { return id; }
-    public String getName()             { return name; }
-    public void setName(String n)       { this.name = n; }
-    public int getMaxTeachers()         { return maxTeachers; }
-    public void setMaxTeachers(int m)   { this.maxTeachers = m; }
-    public List<Teacher> getTeachers()  { return teachers; }
-    public List<Rate> getRates()        { return rates; }
+    public Long   getId()                { return id; }
+    public String getName()              { return name; }
+    public void   setName(String n)      { this.name = n; }
 
-    /* ---------- logika pomocnicza ---------- */
+    public int    getMaxTeachers()       { return maxTeachers; }
+    public void   setMaxTeachers(int m)  { this.maxTeachers = m; }
 
-    public void addTeacher(Teacher t)   { teachers.add(t); t.setGroup(this); }
-    public void removeTeacher(Teacher t){ teachers.remove(t); t.setGroup(null); }
+    public List<Teacher> getTeachers()   { return teachers; }
+    public List<Rate>    getRates()      { return rates; }
 
-    public double getFillPercentage() {
-        return maxTeachers == 0 ? 0 : 100.0 * teachers.size() / maxTeachers;
+    /* ---------- relacje pomocnicze ---------- */
+
+    public void addTeacher(Teacher t) {
+        teachers.add(t);
+        t.setGroup(this);
+    }
+    public void removeTeacher(Teacher t) {
+        teachers.remove(t);
+        t.setGroup(null);
     }
 
-    /** Krótkie info na konsoli (używa ClassContainer.summary). */
+    public void addRate(Rate r) {
+        rates.add(r);
+        r.setGroup(this);
+    }
+    public void removeRate(Rate r) {
+        rates.remove(r);
+        r.setGroup(null);
+    }
+
+    /* ---------- inne ---------- */
+
+    /** procent zapełnienia grupy */
+    public double getFillPercentage() {
+        return maxTeachers == 0 ? 0.0 : 100.0 * teachers.size() / maxTeachers;
+    }
+
     public void summary() {
-        System.out.printf("== %s ==  (nauczycieli: %d / %d) %.1f%%%n",
+        System.out.printf("== %s == (%d/%d) %.1f%%%n",
                 name, teachers.size(), maxTeachers, getFillPercentage());
     }
 
     @Override
     public String toString() {
-        return "ClassTeacher{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", maxTeachers=" + maxTeachers +
-                '}';
+        return "ClassTeacher{" + "name='" + name + '\'' +
+                ", max=" + maxTeachers + '}';
     }
 }
